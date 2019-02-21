@@ -6,6 +6,15 @@ const lightningPayReq = require('bolt11')
 const { spawn } = require('child_process');
 
 
+var decodePayReq = function(payreq) {
+	return new Promise(function(success, nosuccess) {
+		var decoded = lightningPayReq.decode(payreq);
+		success(decoded);
+
+
+	});
+};
+
 var getInvoice = function(invoice_id) {
 	return new Promise(function(success, nosuccess) {
 
@@ -14,7 +23,7 @@ var getInvoice = function(invoice_id) {
 
 	    pyprog.stdout.on('data', function(data) {
 		var invoice = JSON.parse(data.toString()).data.invoice;
-		success(JSON.stringify(invoice));
+		success(invoice);
 	    });
 
 	    pyprog.stderr.on('data', (data) => {
@@ -32,11 +41,15 @@ app.get('/api/invoice/:id', (req, res) => {
 
 });
 
-app.get('/api/payreq/:id', (req, res) => {
+app.get('/api/payreq/:payreq', (req, res) => {
 
-     getInvoice(req.params.id).then(function(invoice) {
-        res.end(invoice);
-    });
+     decodePayReq(req.params.payreq).then(function(payReq) {
+        res.end(JSON.stringify(payReq));
+    }).catch(function(e) {
+console.log(e);
+        res.end("novalido");
+
+	});
 
 });
 
